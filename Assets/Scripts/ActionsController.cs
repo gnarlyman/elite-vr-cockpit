@@ -52,6 +52,8 @@ namespace EVRC
         {
             D1,
             D2,
+            D3,
+            D4,
         }
 
         public class ButtonActionsPress
@@ -339,27 +341,31 @@ namespace EVRC
             var vr = OpenVR.System;
             var state = new VRControllerState_t();
             var size = (uint)System.Runtime.InteropServices.Marshal.SizeOf(typeof(VRControllerState_t));
+            var dir = new Direction();
 
             bool started = false;
             Vector2 anchorPos = Vector2.zero;
+            Direction anchorDir = new Direction();
             while (vr.GetControllerState(deviceIndex, ref state, size))
             {
                 var pos = ControllerAxisToVector2(state.rAxis0);
                 if (started)
                 {
-                    var deltaPos = pos - anchorPos;
+                    var deltaPos = pos;
                     float magnitude = 0;
-                    Direction dir = GetLargestVectorDirection(deltaPos, ref magnitude);
-                    if (magnitude >= trackpadDirectionInterval)
+                    dir = GetLargestVectorDirection(deltaPos, ref magnitude);
+                    Debug.Log("Hand " + hand.ToString() + " Dir " + dir + " Magnitude " + magnitude);
+                    if (magnitude >= 0.25)
                     {
                         anchorPos = pos;
-                        var btn = new DirectionActionsPress(hand, DirectionAction.D2, dir, true);
+                        anchorDir = dir;
+                        var btn = new DirectionActionsPress(hand, DirectionAction.D1, dir, true);
                         DirectionActionPress.Send(btn);
 
                         // Wait long enough for ED to recieve any keypresses
-                        yield return KeyboardInterface.WaitForKeySent();
-
-                        new DirectionActionsPress(hand, DirectionAction.D2, dir, false);
+                        // yield return KeyboardInterface.WaitForKeySent();
+                    } else { 
+                        var btn = new DirectionActionsPress(hand, DirectionAction.D1, anchorDir, false);
                         DirectionActionUnpress.Send(btn);
                     }
                 }
@@ -367,12 +373,17 @@ namespace EVRC
                 {
                     started = true;
                     anchorPos = pos;
+                    anchorDir = dir;
                 }
 
                 yield return null;
 
                 if (trackpadTouchingCoroutineId[hand] != coroutineId)
                 {
+                    Debug.Log("Hand " + hand.ToString() + " Dir " + dir + " Stop");
+                    var btn = new DirectionActionsPress(hand, DirectionAction.D1, dir, false);
+                    DirectionActionUnpress.Send(btn);
+
                     yield break;
                 }
             }

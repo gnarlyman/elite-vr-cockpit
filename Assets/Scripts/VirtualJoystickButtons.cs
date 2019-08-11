@@ -28,6 +28,8 @@ namespace EVRC
         {
             { DirectionAction.D1, 1 },
             { DirectionAction.D2, 2 },
+            { DirectionAction.D3, 3 },
+            { DirectionAction.D4, 4 },
         };
         private static Dictionary<Direction, HatDirection> directionMap = new Dictionary<Direction, HatDirection>()
         {
@@ -55,7 +57,8 @@ namespace EVRC
 
         private void OnActionPress(ButtonActionsPress ev)
         {
-            if (!IsValidHand(ev.hand)) return;
+            // if (!IsValidHand(ev.hand)) return;
+            Debug.Log("Hand " + ev.hand.ToString() + " OnActionPress " + ev.button.ToString());
 
             if (joyBtnMap.ContainsKey(ev.button))
             {
@@ -66,7 +69,8 @@ namespace EVRC
 
         private void OnActionUnpress(ButtonActionsPress ev)
         {
-            if (!IsValidHand(ev.hand)) return;
+            // if (!IsValidHand(ev.hand)) return;
+            Debug.Log("Hand " + ev.hand.ToString() + " OnActionUnpress " + ev.button.ToString());
 
             if (joyBtnMap.ContainsKey(ev.button))
             {
@@ -77,22 +81,34 @@ namespace EVRC
 
         private void OnDirectionPress(ActionsController.DirectionActionsPress ev)
         {
-            if (!IsValidHand(ev.hand)) return;
+            // if (!IsValidHand(ev.hand)) return;
+            Debug.Log("Hand " + ev.hand.ToString() + " OnDirectionPress " + ev.button.ToString());
 
             if (joyHatMap.ContainsKey(ev.button))
             {
-                uint hatNumber = joyHatMap[ev.button];
+                var button_id = (int)ev.button;
+                if (ev.hand == Hand.Left)
+                {
+                    button_id += 2;
+                }
+                uint hatNumber = joyHatMap[(DirectionAction)button_id];
                 SetHatDirection(hatNumber, directionMap[ev.direction]);
             }
         }
 
         private void OnDirectionUnpress(ActionsController.DirectionActionsPress ev)
         {
-            if (!IsValidHand(ev.hand)) return;
+            // if (!IsValidHand(ev.hand)) return;
+            Debug.Log("Hand " + ev.hand.ToString() + " OnDirectionUnpress " + ev.button.ToString());
 
             if (joyHatMap.ContainsKey(ev.button))
             {
-                uint hatNumber = joyHatMap[ev.button];
+                var button_id = (int)ev.button;
+                if (ev.hand == Hand.Left)
+                {
+                    button_id += 2;
+                }
+                uint hatNumber = joyHatMap[(DirectionAction)button_id];
                 ReleaseHatDirection(hatNumber);
             }
         }
